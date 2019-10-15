@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+	<!--<![endif]-->
+
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title></title>
+		<meta name="description" content="" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			body {{
+				--main: #2196f3;
+				--accent: #9e9e9e33;
+				counter-reset: table-counter;
+			}}
+
+			table {{
+				border-spacing: 0;
+				border-collapse: separate;
+				position: relative;
+			}}
+
+			thead th {{
+                padding: 1rem 0.5rem;
+				text-align: center;
+				border-bottom: 1px solid var(--accent);
+				padding-bottom: 1rem;
+				position: sticky;
+				top: 3.25rem;
+				background: white;
+			}}
+
+			tr,
+			td {{
+				padding: 1rem 0.5rem;
+				text-align: center;
+			}}
+
+			tbody tr:nth-child(even) {{
+				background: var(--accent);
+			}}
+
+			tbody tr:hover {{
+				box-shadow: 5px 5px 5px 0 rgba(0, 0, 0, 0.2);
+			}}
+
+			.table-wrapper {{
+				position: relative;
+				padding-bottom: 2rem;
+				border-bottom: 1px dashed var(--accent);
+				margin-bottom: 2rem;
+			}}
+
+			.table-wrapper .title {{
+				display: flex;
+				padding: 1rem 0.5rem;
+				font-weight: bolder;
+				font-size: 1.2rem;
+				position: sticky;
+				top: 0;
+				background: #fff;
+				z-index: 1;
+			}}
+
+			.table-wrapper .table-no::before {{
+				counter-increment: table-counter;
+				content: counter(table-counter) ":";
+				margin-right: 0.6rem;
+			}}
+		</style>
+	</head>
+
+	<body>
+		<!--[if lt IE 7]>
+			<p class="browsehappy">
+				You are using an <strong>outdated</strong> browser. Please
+				<a href="#">upgrade your browser</a> to improve your experience.
+			</p>
+		<![endif]-->
+		{tables}
+	</body>
+</html>
