@@ -364,5 +364,5 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-	arguments = docopt(__doc__, version='1.0')
+	arguments = docopt(__doc__, version='1.0.1')
 	main(arguments)
