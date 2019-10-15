@@ -26,12 +26,10 @@
 			}}
 
 			thead th {{
-                padding: 1rem 0.5rem;
-				text-align: center;
 				border-bottom: 1px solid var(--accent);
 				padding-bottom: 1rem;
 				position: sticky;
-				top: 3.25rem;
+				top: 5.2%;
 				background: white;
 			}}
 
@@ -57,7 +55,7 @@
 			}}
 
 			.table-wrapper .title {{
-				display: flex;
+				display: inline-flex;
 				padding: 1rem 0.5rem;
 				font-weight: bolder;
 				font-size: 1.2rem;
@@ -65,12 +63,55 @@
 				top: 0;
 				background: #fff;
 				z-index: 1;
+				width: 90%;
+			}}
+
+			.table-wrapper .title::before {{
+				content: "";
+				position: absolute;
+				top: 0;
+				left: -10%;
+				width: 10%;
+				height: 100%;
+				background: #fff;
 			}}
 
 			.table-wrapper .table-no::before {{
 				counter-increment: table-counter;
 				content: counter(table-counter) ":";
 				margin-right: 0.6rem;
+			}}
+
+			.accordion {{
+				max-height: 100vh;
+				transition: max-height 0.3s ease-in;
+			}}
+
+			.table-toggle-checkbox {{
+				display: inline-flex;
+				position: sticky;
+				top: 1.2rem;
+				appearance: none;
+				-webkit-appearance: none;
+				-moz-appearance: none;
+				border: solid #000;
+				border-width: 0 3px 3px 0;
+				display: inline-block;
+				padding: 4px;
+				transform: rotate(45deg);
+				transition: transform 0.3s ease;
+				background: #fff;
+				z-index: 1000;
+				outline: 0 !important;
+			}}
+
+			.table-toggle-checkbox:checked {{
+				transform: rotate(-45deg);
+			}}
+
+			.table-toggle-checkbox:checked + .title + .accordion {{
+				max-height: 0;
+				overflow: hidden;
 			}}
 		</style>
 	</head>

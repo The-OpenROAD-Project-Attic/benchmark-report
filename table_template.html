@@ -1,18 +1,20 @@
 <div class="table-wrapper">
+	<input type="checkbox" class="table-toggle-checkbox" />
 	<div class="title">
 		Report #
 		<div class="table-no"></div>
 		<div class="table-name">{title}</div>
 	</div>
-
-	<table>
-		<thead>
-			<tr>
-				{headers}
-			</tr>
-		</thead>
-		<tbody>
-			{rows}
-		</tbody>
-	</table>
+	<div class="accordion">
+		<table>
+			<thead>
+				<tr>
+					{headers}
+				</tr>
+			</thead>
+			<tbody>
+				{rows}
+			</tbody>
+		</table>
+	</div>
 </div>
