@@ -13,6 +13,7 @@ Options:
   --no-run-flow  Generate the reports without re-running the flow.
   --platform=<tech>  Technology used (e.g. nangate45, tsmc65lp).  [default: nangate45]
   --stage=<stage>  Design stage to run (e.g. synth, floorplan..etc).  [default: place]
+  --tool=<tool>  The target tool for the report to pick the proper parser  [default: resizer]
   --designs=<designs>  Comma-seperated list of designs to run the flow on.  [default: gcd,aes,ibex,swerv]
   --reports=<reports>  Comma-seperated list of reports to collect, can use semi-colon to specify report title.  [default: 3_1_2_place_gp_dp.log:DP Only,3_2_a_2_place_resized.log: Resize + Buffer -> DP,3_2_a_4_place_resized_cloned.log: Resize + Buffer -> DP -> Gate Cloning -> DP,3_2_b_2_place_cloned.log:Gate Cloning -> DP,3_2_b_4_place_cloned_resized.log: Gate Cloning -> DP -> Resize + Buffer -> DP]
   --compare=<deltas>  Expression to evaluate deltas between different reports in format of <report-index>,<report-index>,...:<attr>~<delta-name>,<attr>~<delta-name>...;<report-index>,<report-index>,...:<attr>~<delta-name>,<attr>~<delta-name>...  [default: 1,2,3:area~Area Change,dat~DAT Change,violations~Violations Change;1,4,5:area~Area Change,dat~DAT Change,violations~Violations Change]
@@ -41,20 +42,9 @@ from openpyxl import Workbook
 from openpyxl.cell import Cell
 from openpyxl.styles import Font, Border, Side, Alignment
 import json
+import resizer
+import importlib
 
-# from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
-
-
-timing_report_map = {
-	'design': 'Design',
-	'dat': 'DAT',
-	'slack': 'CP Slack',
-	'total_slack': 'Total Slack',
-	'average_slack': 'Average Slack',
-	'area': 'Area',
-	'util': 'Utilization',
-	'violations': 'Violations'
-}
 
 def read_file(filepath):
 	with open(filepath, 'r') as f:
@@ -82,55 +72,11 @@ def run_flow(config_file, make_cmd='make', clean_cmd='clean_all', stage='place',
 	if return_code:
 		raise subprocess.CalledProcessError(return_code, cmd)
 
-def parse_time_report(report_content):
-	path_slices = list(filter(lambda s: s.startswith(':'), re.compile(r'\s*Startpoint\s*', re.M).split(report_content)))
-	last_data = path_slices[-1]
-	min_dat = None
-	max_dat = None
-	min_slack = None
-	max_slack = None
-	for slice in path_slices:
-		path_type = re.compile(r'Path\s+Type\s*\:\s*(\w+)', re.M).search(slice)[1]
-		slack = float(re.compile(r'(\d+(.\d+)?)\s+slack\s+', re.M).search(slice)[1])
-		dat = float(re.compile(r'(\d+(.\d+)?)\s+data\s+arrival\s+time\s+', re.M).search(slice)[1])
-		if path_type == 'min':
-			min_dat = dat
-			min_slack = slack
-		if path_type == 'max':
-			max_dat = dat
-			max_slack = slack
-	area_matches = re.compile(r'Design\s+area\s+(\d+(.\d+)?)\s+u\^2\s+(\d+(.\d+)?)%\s+utilization\.', re.M).search(last_data)
-	area = int(area_matches[1]);
-	util = float(area_matches[3]);
 
-	total_slack = float(re.compile(r'Total\s+Slack\s*\:\s*(\d+(.\d+)?)', re.M).search(last_data)[1])
-	average_slack = 'N/A'
-	if re.compile(r'Average\s+Slack\s*\:\s*(\d+(.\d+)?)', re.M).search(last_data):
-		average_slack = float(re.compile(r'Average\s+Slack\s*\:\s*(\d+(.\d+)?)', re.M).search(last_data)[1])
-	violations = len(re.compile('VIOLATED', re.M).findall(last_data))
-	tns = float((re.compile(r'tns\s+(\d+(.\d+)?)', re.M).search(last_data) or [0.0, 0.0])[1])
-	wns = float((re.compile(r'wns\s+(\d+(.\d+)?)', re.M).search(last_data) or [0.0, 0.0])[1])
-	return {
-		'min_dat': round(min_dat, 4),
-		'max_dat': round(max_dat, 4),
-		'min_slack': round(min_slack, 4),
-		'max_slack': round(max_slack, 4),
-		'slack': round(max_slack, 4),
-		'dat': round(max_dat, 4),
-		'area': area,
-		'util': round(util, 4),
-		'total_slack': round(total_slack, 4),
-		'average_slack': round(average_slack, 4) if average_slack != 'N/A' else average_slack,
-		'violations': violations,
-		'tns': round(tns, 4),
-		'wns': round(wns, 4)
-	}
-	
 
-def parse_report(report_path, report_type='timing'):
+def parse_report(report_path, reporter):
 	report_content = read_file(report_path)
-	if report_type == 'timing':
-		return parse_time_report(report_content)
+	return reporter.parse(report_content)
 
 def write_csv(writing_data, headers, output_file):
 	outfile_path = os.path.join(os.path.dirname(output_file), os.path.basename(output_file) + '.csv')
@@ -258,6 +204,9 @@ def main(arguments):
 	compare_expr = arguments['--compare']
 	output_file = arguments['--out']
 	color_delta = not arguments['--no-color-delta']
+	tool = arguments['--tool']
+
+	reporter = importlib.import_module(tool).Reporter()
 
 	if not generate_csv and not generate_html and not generate_json and not generate_xlsx:
 		generate_xlsx = True
@@ -320,7 +269,7 @@ def main(arguments):
 		for parsed_report_name in parsed_report_names:
 			filename = parsed_report_name['filename']
 			report_path = os.path.join(report_dir, filename)
-			parsed_report = parse_report(report_path)
+			parsed_report = parse_report(report_path, reporter=reporter)
 			parsed_report['design'] = design
 
 			if filename not in raw_parsed_reports:
@@ -330,7 +279,7 @@ def main(arguments):
 			raw_parsed_reports[filename][design] = parsed_report
 			parsed_reports[filename][design] = {}
 
-			for k,v in timing_report_map.items():
+			for k,v in reporter.map().items():
 				parsed_reports[filename][design][v] = parsed_report[k]
 
 	for parsed_report_name in parsed_report_names:
@@ -342,7 +291,8 @@ def main(arguments):
 					for attr, attr_title in attr_pairs:
 						diff = round(raw_parsed_reports[report_name][design][attr] - raw_parsed_reports[report_index_to_name[report_index]][design][attr], 4)
 						parsed_report[attr_title] = '+' + str(diff) if diff >= 0 else '-' + str(-1 * diff)
-	headers = list(timing_report_map.values()) + list(delta_fields_dict.values())
+	
+	headers = list(reporter.map().values()) + list(delta_fields_dict.values())
 
 	for filename, data in writing_data.items():
 		parsed_report = parsed_reports[filename]
@@ -364,5 +314,5 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-	arguments = docopt(__doc__, version='1.0.2')
+	arguments = docopt(__doc__, version='1.0.3')
 	main(arguments)
