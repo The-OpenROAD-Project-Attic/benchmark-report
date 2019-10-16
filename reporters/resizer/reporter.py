@@ -1,4 +1,4 @@
-from base_reporter import BaseReporter
+from reporters import BaseReporter
 import re
 
 class Reporter(BaseReporter):
@@ -12,6 +12,8 @@ class Reporter(BaseReporter):
 			'slack': 'CP Slack',
 			'total_slack': 'Total Slack',
 			'average_slack': 'Average Slack',
+			'tns': 'TNS',
+			'wns': 'WNS',
 			'area': 'Area',
 			'util': 'Utilization',
 			'violations': 'Violations'

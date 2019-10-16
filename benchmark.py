@@ -42,8 +42,9 @@ from openpyxl import Workbook
 from openpyxl.cell import Cell
 from openpyxl.styles import Font, Border, Side, Alignment
 import json
-import resizer
 import importlib
+from reporters import BaseReporter
+
 
 
 def read_file(filepath):
@@ -206,7 +207,8 @@ def main(arguments):
 	color_delta = not arguments['--no-color-delta']
 	tool = arguments['--tool']
 
-	reporter = importlib.import_module(tool).Reporter()
+	reporter = importlib.import_module('reporters.' + tool).Reporter()
+	assert(isinstance(reporter, BaseReporter))
 
 	if not generate_csv and not generate_html and not generate_json and not generate_xlsx:
 		generate_xlsx = True

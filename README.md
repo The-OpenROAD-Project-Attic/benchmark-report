@@ -42,4 +42,4 @@ Python 3.x
 
 ## Adding reports for another tool
 
-To support reports from another tool, you need to create a new subdirectory under tool root dir, you then need to export a class named `Reporter` that inherits from BaseReporter and implements `parse` and `map` methods. You can then use the new module by passing the subdirectory name to the option `--tool=<tool>`. Refer to the Resizer reporter (`./resizer`) for reference.
+To support reports from another tool, you need to create a new subdirectory under `./reporters/`, you then need to export a class named `Reporter` that inherits from BaseReporter and implements `parse(report_content)` and `map()` methods. You can then use the new module by passing the subdirectory name to the option `--tool=<tool>`. Refer to the Resizer reporter (`./reporters/resizer`) for reference.
