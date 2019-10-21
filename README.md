@@ -26,7 +26,8 @@ Python 3.x
 -   `--tool=<tool>` The target tool for the report to pick the proper parser **[default: resizer]**
 -   `--designs=<designs>` Comma-seperated list of designs to run the flow on. **default: gcd,aes,ibex,swerv**
 -   `--reports=<reports>` Comma-seperated list of reports to collect, can use semi-colon to specify report title. **default: 3_1_2_place_gp_dp.log:DP Only,3_2_a_2_place_resized.log: Resize + Buffer -> DP,3_2_a_4_place_resized_cloned.log: Gate Cloning -> DP,3_2_b_2_place_cloned.log:Gate Cloning -> DP,3_2_b_4_place_cloned_resized.log: Gate Cloning -> DP -> Resize + Buffer -> DP**
--   `--compare=<deltas>` Expression to evaluate deltas between different reports in format of \<report-index\>,\<report-index\>,...:\<attr\>\~\<delta-name\>,\<attr\>\~\<delta-name\>...;\<report-index\>,\<report-index\>,...:\<attr\>\~\<delta-name\>,\<attr\>\~\<delta-name\>... **[default: 1,2,3:area\~Area Change,dat\~DAT Change,violations\~Violations Change;1,4,5:area\~Area Change,dat\~DAT Change,violations\~Violations Change]**
+-   `--compare=<deltas>` Expression to evaluate deltas between different reports in format of \<report-index\>,\<report-index\>,...:\<attr\>\~\<delta-name\>,\<attr\>\~\<delta-name\>...;\<report-index\>,\<report-index\>,...:\<attr\>\~\<delta-name\>,\<attr\>\~\<delta-name\>... **[default: 1,2,3:area\~Area Change,TIMING::SLACK::DAT\~DAT Change,TIMING::VIOLATION::TOTAL\~Violations Change;1,4,5:area\~Area Change,TIMING::SLACK::DAT\~DAT Change,TIMING::VIOLATION::TOTAL\~Violations Change]**
+-   `--no-map` Use original loggin values instead of mapped naming. **[default: False]**
 -   `--clean-command=<cmd>` The make command to clean the current designs. **default: clean_all**
 -   `--no-clean` Do not clean the output directories before starting the flow. **Default: False**
 -   `--excel` Generate the report in Excel format. **default: True**
