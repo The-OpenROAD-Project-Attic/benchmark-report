@@ -16,7 +16,8 @@ Options:
   --tool=<tool>  The target tool for the report to pick the proper parser  [default: resizer]
   --designs=<designs>  Comma-seperated list of designs to run the flow on.  [default: gcd,aes,ibex,swerv]
   --reports=<reports>  Comma-seperated list of reports to collect, can use semi-colon to specify report title.  [default: 3_1_2_place_gp_dp.log:DP Only,3_2_a_2_place_resized.log: Resize + Buffer -> DP,3_2_a_4_place_resized_cloned.log: Resize + Buffer -> DP -> Gate Cloning -> DP,3_2_b_2_place_cloned.log:Gate Cloning -> DP,3_2_b_4_place_cloned_resized.log: Gate Cloning -> DP -> Resize + Buffer -> DP]
-  --compare=<deltas>  Expression to evaluate deltas between different reports in format of <report-index>,<report-index>,...:<attr>~<delta-name>,<attr>~<delta-name>...;<report-index>,<report-index>,...:<attr>~<delta-name>,<attr>~<delta-name>...  [default: 1,2,3:area~Area Change,dat~DAT Change,violations~Violations Change;1,4,5:area~Area Change,dat~DAT Change,violations~Violations Change]
+  --compare=<deltas>  Expression to evaluate deltas between different reports in format of <report-index>,<report-index>,...:<attr>~<delta-name>,<attr>~<delta-name>...;<report-index>,<report-index>,...:<attr>~<delta-name>,<attr>~<delta-name>...  [default: 1,2,3:IR::AREA::DSG~Area Change,TIMING::SLACK::DAT~DAT Change,TIMING::VIOLATION::TOTAL~Violations Change;1,4,5:IR::AREA::DSG~Area Change,TIMING::SLACK::DAT~DAT Change,TIMING::VIOLATION::TOTAL~Violations Change]
+  --no-map  Use original loggin values instead of mapped naming.  [default: False]
   --no-color-delta  Disable values coloring starting with + or - as Green or Red respectively.  [default: False]
   --clean-command=<cmd>  The make command to clean the current designs.  [default: clean_all]
   --no-clean  Do not clean the output directories before starting the flow.  [Default: False]
@@ -144,7 +145,7 @@ def write_json(writing_data, headers, output_file):
 	for report_name, report in writing_data.items():
 		json_data[report['title']] = {}
 		for row in report['rows']:
-			json_data[report['title']][row['Design']] = dict((header, row[header] if header in row else 'N/A') for header in headers)
+			json_data[report['title']][row.get('Design', row.get('design', ''))] = dict((header, row[header] if header in row else 'N/A') for header in headers)
 
 	with open(outfile_path, 'w') as jsonfile:
 		json.dump(json_data, jsonfile, sort_keys=True, indent=4, separators=(',', ': '))
@@ -206,6 +207,7 @@ def main(arguments):
 	output_file = arguments['--out']
 	color_delta = not arguments['--no-color-delta']
 	tool = arguments['--tool']
+	no_map = arguments['--no-map']
 
 	reporter = importlib.import_module('reporters.' + tool).Reporter()
 	assert(isinstance(reporter, BaseReporter))
@@ -245,7 +247,9 @@ def main(arguments):
   
 	delta_fields_dict = {}
 	for expr in re.compile('\s*[;]\s*').split(compare_expr):
-		[report_indices, attrs] = re.compile('\s*:\s*').split(expr)
+		report_indices_attrs = re.compile('\s*:\s*').split(expr)
+		report_indices = report_indices_attrs[0]
+		attrs = ':'.join(report_indices_attrs[1:])
 		report_indices = list(map(lambda x: int(x) - 1, re.compile('\s*,\s*').split(report_indices)))
 		attrs_key_value = re.compile('\s*,\s*').split(attrs)
 		attrs = list(map(lambda x: (re.compile('\s*~\s*').split(x)[0], re.compile('\s*~\s*').split(x)[1]), re.compile('\s*,\s*').split(attrs)))
@@ -282,7 +286,7 @@ def main(arguments):
 			parsed_reports[filename][design] = {}
 
 			for k,v in reporter.map().items():
-				parsed_reports[filename][design][v] = parsed_report[k]
+				parsed_reports[filename][design][k if no_map else v] = parsed_report[k]
 
 	for parsed_report_name in parsed_report_names:
 			deltas = parsed_report_name['deltas']
@@ -294,7 +298,7 @@ def main(arguments):
 						diff = round(raw_parsed_reports[report_name][design][attr] - raw_parsed_reports[report_index_to_name[report_index]][design][attr], 4)
 						parsed_report[attr_title] = '+' + str(diff) if diff >= 0 else '-' + str(-1 * diff)
 	
-	headers = list(reporter.map().values()) + list(delta_fields_dict.values())
+	headers = list(reporter.map().keys() if no_map else reporter.map().values()) + list(delta_fields_dict.values())
 
 	for filename, data in writing_data.items():
 		parsed_report = parsed_reports[filename]
@@ -316,5 +320,5 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-	arguments = docopt(__doc__, version='1.0.3')
+	arguments = docopt(__doc__, version='1.0.4')
 	main(arguments)

@@ -7,16 +7,16 @@ class Reporter(BaseReporter):
 
 	def map(self):
 		return {
-			'design': 'Design',
-			'dat': 'DAT',
-			'slack': 'CP Slack',
-			'total_slack': 'Total Slack',
-			'average_slack': 'Average Slack',
-			'tns': 'TNS',
-			'wns': 'WNS',
-			'area': 'Area',
-			'util': 'Utilization',
-			'violations': 'Violations'
+			'design': 'design',
+			'TIMING::SLACK::DAT': 'DAT',
+			'TIMING::SLACK': 'CP Slack',
+			'TIMING::SLACK::TOTAL': 'Total Slack',
+			'TIMING::SLACK::AVG': 'Average Slack',
+			'TIMING::SLACK::TNS': 'TNS',
+			'TIMING::SLACK::WNS': 'WNS',
+			'IR::AREA::DSG': 'Area',
+			'PLACEMENT::DENSITY': 'Utilization',
+			'TIMING::VIOLATION::TOTAL': 'Violations'
 		}
 
 	def parse(self, report_content):
@@ -48,17 +48,17 @@ class Reporter(BaseReporter):
 		tns = float((re.compile(r'tns\s+(\d+(.\d+)?)', re.M).search(last_data) or [0.0, 0.0])[1])
 		wns = float((re.compile(r'wns\s+(\d+(.\d+)?)', re.M).search(last_data) or [0.0, 0.0])[1])
 		return {
-			'min_dat': round(min_dat, 4),
-			'max_dat': round(max_dat, 4),
-			'min_slack': round(min_slack, 4),
-			'max_slack': round(max_slack, 4),
-			'slack': round(max_slack, 4),
-			'dat': round(max_dat, 4),
-			'area': area,
-			'util': round(util, 4),
-			'total_slack': round(total_slack, 4),
-			'average_slack': round(average_slack, 4) if average_slack != 'N/A' else average_slack,
-			'violations': violations,
-			'tns': round(tns, 4),
-			'wns': round(wns, 4)
+			'TIMING::SLACK::DAT::MIN': round(min_dat, 4),
+			'TIMING::SLACK::DAT::MAX': round(max_dat, 4),
+			'TIMING::SLACK::MIN': round(min_slack, 4),
+			'TIMING::SLACK::MAX': round(max_slack, 4),
+			'TIMING::SLACK': round(max_slack, 4),
+			'TIMING::SLACK::DAT': round(max_dat, 4),
+			'IR::AREA::DSG': area,
+			'PLACEMENT::DENSITY': round(util, 4),
+			'TIMING::SLACK::TOTAL': round(total_slack, 4),
+			'TIMING::SLACK::AVG': round(average_slack, 4) if average_slack != 'N/A' else average_slack,
+			'TIMING::VIOLATION::TOTAL': violations,
+			'TIMING::SLACK::TNS': round(tns, 4),
+			'TIMING::SLACK::WNS': round(wns, 4)
 		}
