@@ -36,6 +36,10 @@ class Reporter(BaseReporter):
 			if path_type == 'max':
 				max_dat = dat
 				max_slack = slack
+		if min_dat > max_dat:
+			max_dat, min_dat = min_dat, max_dat
+		if min_slack > max_slack:
+			max_slack, min_slack = min_slack, max_slack
 		area_matches = re.compile(r'Design\s+area\s+(\d+(.\d+)?)\s+u\^2\s+(\d+(.\d+)?)%\s+utilization\.', re.M).search(last_data)
 		area = int(area_matches[1]);
 		util = float(area_matches[3]);
@@ -52,7 +56,7 @@ class Reporter(BaseReporter):
 			'TIMING::SLACK::DAT::MAX': round(max_dat, 4),
 			'TIMING::SLACK::MIN': round(min_slack, 4),
 			'TIMING::SLACK::MAX': round(max_slack, 4),
-			'TIMING::SLACK': round(max_slack, 4),
+			'TIMING::SLACK': round(min_slack, 4),
 			'TIMING::SLACK::DAT': round(max_dat, 4),
 			'IR::AREA::DSG': area,
 			'PLACEMENT::DENSITY': round(util, 4),
