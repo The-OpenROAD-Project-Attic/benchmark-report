@@ -28,7 +28,7 @@ Options:
   --json  Generate the report in json format.
   --quiet  Suppres flow run messages  [default: False]
   -o --out=<dir>  Output file name (without extension).  [default: ./report]
-  --design-path-pattern=<path>  The pattern that will be used to map the design to configuration file.  [default: ./designs/{}_{}.mk]
+  --design-path-pattern=<path>  The pattern that will be used to map the design to configuration file.  [default: ./designs/{}/{}.mk]
   --make-cmd=<cmd>  The path/command to run the make tool.  [default: make]
   --design-config-var=<var>  The variable used to set the design configuration file in the Makefile.  [default: DESIGN_CONFIG]
 """
@@ -53,7 +53,7 @@ def read_file(filepath):
 		return f.read()
 
 def get_top_module(config_file):
-	return re.compile('export\s+DESIGN_NAME\s*=\s*(\w+)', re.I).match(read_file(config_file))[1]
+	return re.compile(r'export\s+DESIGN_NAME\s*=\s*(\w+)', re.I).search(read_file(config_file))[1]
 
 def run_flow(config_file, make_cmd='make', clean_cmd='clean_all', stage='place', design_config_var='DESIGN_CONFIG', no_clean=False):
 	cmd = f'{make_cmd} {stage}'
@@ -214,6 +214,8 @@ def main(arguments):
 
 	if not generate_csv and not generate_html and not generate_json and not generate_xlsx:
 		generate_xlsx = True
+
+	current_path = os.getcwd()
 	
 	os.chdir(arguments['--working-dir'])
 	
@@ -223,7 +225,7 @@ def main(arguments):
 		for design in designs:
 				if not quiet:
 					print(f'Running flow [{stage}] for design {design}:{tech}')
-				config_file = design_path_pattern.format(design, tech)
+				config_file = design_path_pattern.format(tech, design)
 				for results in run_flow(config_file, make_cmd=make_cmd, clean_cmd=clean_cmd, stage=stage, design_config_var=design_config_var, no_clean=no_clean):
 					if not quiet:
 						print(results)
@@ -246,22 +248,24 @@ def main(arguments):
 		i = i + 1
   
 	delta_fields_dict = {}
-	for expr in re.compile('\s*[;]\s*').split(compare_expr):
-		report_indices_attrs = re.compile('\s*:\s*').split(expr)
-		report_indices = report_indices_attrs[0]
-		attrs = ':'.join(report_indices_attrs[1:])
-		report_indices = list(map(lambda x: int(x) - 1, re.compile('\s*,\s*').split(report_indices)))
-		attrs_key_value = re.compile('\s*,\s*').split(attrs)
-		attrs = list(map(lambda x: (re.compile('\s*~\s*').split(x)[0], re.compile('\s*~\s*').split(x)[1]), re.compile('\s*,\s*').split(attrs)))
-		for i, index in enumerate(report_indices):
-			if i == 0:
-				continue
-			prev_index = report_indices[i - 1]
-			if prev_index not in parsed_report_names[index]['deltas']:
-				parsed_report_names[index]['deltas'][prev_index] = []
-			for attr in attrs:
-				delta_fields_dict[attr[0]] = attr[1]
-				parsed_report_names[index]['deltas'][prev_index] += [attr]
+
+	if len(compare_expr.strip()):
+		for expr in re.compile('\s*[;]\s*').split(compare_expr):
+			report_indices_attrs = re.compile('\s*:\s*').split(expr)
+			report_indices = report_indices_attrs[0]
+			attrs = ':'.join(report_indices_attrs[1:])
+			report_indices = list(map(lambda x: int(x) - 1, re.compile('\s*,\s*').split(report_indices)))
+			attrs_key_value = re.compile('\s*,\s*').split(attrs)
+			attrs = list(map(lambda x: (re.compile('\s*~\s*').split(x)[0], re.compile('\s*~\s*').split(x)[1]), re.compile('\s*,\s*').split(attrs)))
+			for i, index in enumerate(report_indices):
+				if i == 0:
+					continue
+				prev_index = report_indices[i - 1]
+				if prev_index not in parsed_report_names[index]['deltas']:
+					parsed_report_names[index]['deltas'][prev_index] = []
+				for attr in attrs:
+					delta_fields_dict[attr[0]] = attr[1]
+					parsed_report_names[index]['deltas'][prev_index] += [attr]
 
 	writing_data = dict((report['filename'], {'file': report['filename'], 'title': report['title'], 'rows': []}) for report in parsed_report_names)
 
@@ -269,7 +273,7 @@ def main(arguments):
 	parsed_reports = {}
 
 	for design in designs:
-		config_file = design_path_pattern.format(design, tech)
+		config_file = design_path_pattern.format(tech, design)
 		top_module = get_top_module(config_file)
 		report_dir = os.path.join(report_dirs, tech, top_module)
 		for parsed_report_name in parsed_report_names:
@@ -306,6 +310,8 @@ def main(arguments):
 		for design in designs:
 			data['rows'].append(parsed_report[design])
 	
+	os.chdir(current_path)
+	
 	if generate_csv:
 		write_csv(writing_data, headers, output_file)
 
@@ -320,5 +326,5 @@ def main(arguments):
 
 
 if __name__ == '__main__':
-	arguments = docopt(__doc__, version='1.0.4')
+	arguments = docopt(__doc__, version='1.1')
 	main(arguments)

@@ -27,7 +27,7 @@ Python 3.x
 -   `--designs=<designs>` Comma-seperated list of designs to run the flow on. **default: gcd,aes,ibex,swerv**
 -   `--reports=<reports>` Comma-seperated list of reports to collect, can use semi-colon to specify report title. **default: 3_1_2_place_gp_dp.log:DP Only,3_2_a_2_place_resized.log: Resize + Buffer -> DP,3_2_a_4_place_resized_cloned.log: Gate Cloning -> DP,3_2_b_2_place_cloned.log:Gate Cloning -> DP,3_2_b_4_place_cloned_resized.log: Gate Cloning -> DP -> Resize + Buffer -> DP**
 -   `--compare=<deltas>` Expression to evaluate deltas between different reports in format of \<report-index\>,\<report-index\>,...:\<attr\>\~\<delta-name\>,\<attr\>\~\<delta-name\>...;\<report-index\>,\<report-index\>,...:\<attr\>\~\<delta-name\>,\<attr\>\~\<delta-name\>... **[default: 1,2,3:area\~Area Change,TIMING::SLACK::DAT\~DAT Change,TIMING::VIOLATION::TOTAL\~Violations Change;1,4,5:area\~Area Change,TIMING::SLACK::DAT\~DAT Change,TIMING::VIOLATION::TOTAL\~Violations Change]**
--   `--no-map` Use original loggin values instead of mapped naming. **[default: False]**
+-   `--no-map` Use original logging values instead of mapped naming. **[default: False]**
 -   `--clean-command=<cmd>` The make command to clean the current designs. **default: clean_all**
 -   `--no-clean` Do not clean the output directories before starting the flow. **Default: False**
 -   `--excel` Generate the report in Excel format. **default: True**
@@ -37,7 +37,7 @@ Python 3.x
 -   `--json` Generate the report in json format. **default: False**
 -   `--quiet` Suppres flow run messages **default: False**
 -   `-o --out=<dir>` Output file name (without extension). **default: ./report**
--   `--design-path-pattern=<path>` The pattern that will be used to map the design to configuration file. **default: ./designs/{}\_{}.mk**
+-   `--design-path-pattern=<path>` The pattern that will be used to map the design to configuration file. **default: ./designs/{}/{}.mk**
 -   `--make-cmd=<cmd>` The path/command to run the make tool. **default: make**
 -   `--design-config-var=<var>` The variable used to set the design configuration file in the Makefile. **default: DESIGN_CONFIG**
 
